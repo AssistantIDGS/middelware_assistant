@@ -1,8 +1,7 @@
 import express from 'express';
-import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import dotenv from "dotenv";
 import cors from 'cors';
-import bedrockRouter from './src/routes/bedrockRoutes';
+import bedrockRouter from './src/routes/bedrockRoutes.js';
 
 dotenv.config();
 
