@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech</title>
+</head>
+<body>
+    <h1>Conversión de Texto a Audio</h1>
+    
+    <input id="text" type="text" placeholder="Escribe el texto aquí">
+    <button id="send">Enviar</button>
+
+    <audio id="audioPlayer" controls style="display:none;"></audio>
+
+    <script>
+        document.getElementById('send').addEventListener('click', () => {
+            const text = document.getElementById('text').value.trim();
+
+            if (!text) {
+                alert('Por favor, ingresa algún texto.');
+                return;
+            }
+
+
+            fetch('http://localhost:1234/convert/speechToText', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text }),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al convertir texto a audio');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const audioUrl = URL.createObjectURL(blob);
+                const audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.src = audioUrl;
+                audioPlayer.style.display = 'block'; 
+                audioPlayer.play(); 
+            })
+            .catch(error => {
+                console.error('Error al convertir texto a audio:', error);
+                alert('Hubo un problema al convertir el texto a audio. Por favor, inténtalo nuevamente.');
+            });
+        });
+    </script>
+</body>
+</html>

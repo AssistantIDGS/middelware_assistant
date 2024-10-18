@@ -1,5 +1,6 @@
 import express from "express";
 import invokeModel from "../services/aws/bedrock.js";
+
 const bedrockRouter = express.Router();
 
 bedrockRouter.use((req, res, next)=>{

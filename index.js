@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from "dotenv";
 import cors from 'cors';
 import bedrockRouter from './src/routes/bedrockRoutes.js';
+import speechRouter from './src/routes/speechRoutes.js';
 
 dotenv.config();
 
@@ -16,7 +17,9 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/bedrock', bedrockRouter)
+app.use('/bedrock', bedrockRouter);
+
+app.use('/convert', speechRouter);
 
 
 app.listen(PORT, () => {
