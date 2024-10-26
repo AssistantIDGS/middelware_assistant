@@ -2,8 +2,15 @@ import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedroc
 import bedrockConfig from "../../config/bedrock.js";
 import { modelList } from "../../config/modelList.js";
 
+
+export const listModels = () => {
+  return modelList;
+};
+
+
 const invokeModel = async (prompt, modelId) => {
   const model = modelList.find((m) => m.modelId === modelId);
+  // console.log(model);
 
   // Verificar si el modelo existe
   if (!model) {
@@ -14,16 +21,18 @@ const invokeModel = async (prompt, modelId) => {
   const body = { ...model.body };
 
   // Actualizar el prompt en la configuración del cuerpo si existe
-  if (body.prompt) {
+  if (body.hasOwnProperty('prompt')) {
     body.prompt = prompt;
   }
 
-  if (body.inputText) {
-    this.body.inputText = prompt;
+  // Si el cuerpo del modelo utiliza 'inputText', lo actualizamos
+  if (body.hasOwnProperty('inputText')) {
+    body.inputText = prompt;
   }
 
+  // Si el cuerpo del modelo utiliza 'messages', actualizamos el contenido del primer mensaje
   if (body.messages && Array.isArray(body.messages) && body.messages.length > 0) {
-    this.body.messages[0].content = prompt; // Asume que la propiedad 'content' está dentro del primer elemento del array
+    body.messages[0].content = prompt;
   }
 
   // Crear la configuración para invocar el modelo sin la referencia circular
@@ -45,7 +54,7 @@ const invokeModel = async (prompt, modelId) => {
   try {
     const response = await bedrockClient.send(command);
 
-    console.log(response);
+    // console.log("Respuesta completa del modelo:", response);
 
     if (!response || !response.body) {
       throw new Error("Respuesta inválida o vacía del modelo.");
@@ -54,10 +63,13 @@ const invokeModel = async (prompt, modelId) => {
     const decoder = new TextDecoder('utf-8');
     const responseBody = decoder.decode(response.body);
     const parsedBody = JSON.parse(responseBody);
-    // console.log(parsedBody)
 
-    if (parsedBody.generation && parsedBody.generation.length > 0) {
-      return parsedBody.generation;
+    // Imprimimos la estructura completa de la respuesta para analizarla
+    console.log("Estructura de la respuesta decodificada:", parsedBody);
+
+    // Ajusta la lógica basada en la estructura real de la respuesta
+    if ((parsedBody.results && parsedBody.results.length > 0)||(parsedBody.generation && parsedBody.generation.length > 0)) {
+      return parsedBody.generation || parsedBody.results[0].outputText;
     } else {
       throw new Error("Estructura inesperada en la respuesta del modelo.");
     }

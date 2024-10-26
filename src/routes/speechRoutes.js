@@ -1,7 +1,7 @@
 import express from "express";
 import { convertTextToSpeech, deleteAudioFile } from "../services/owner/speech.js";
 
-export const speechRouter = express.Router();
+const speechRouter = express.Router();
 
 speechRouter.use((req, res, next) => {
     console.log(req.ip);
@@ -47,3 +47,4 @@ speechRouter.post("/speechToText", async (req, res) =>{
 
 });
 
+export default speechRouter;

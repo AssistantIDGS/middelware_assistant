@@ -1,4 +1,4 @@
-// Configuración del modelo
+// Configuración del modelo optimizada
 export const modelList = [
     {
         name: "Llama 3.1 405B Instruct",
@@ -6,10 +6,10 @@ export const modelList = [
         region: "us-west-2",
         body:
         {
-            prompt: "hola",
-            max_gen_len: 512,
-            temperature: 0.5,
-            top_p: 0.9,
+            prompt: "di hola",
+            max_gen_len: 150, // Reducido para respuestas más directas
+            temperature: 0.3, // Menor aleatoriedad para respuestas más coherentes
+            top_p: 0.85, // Considerar un rango más amplio de opciones para variedad controlada
         }
     },
     {
@@ -18,10 +18,10 @@ export const modelList = [
         region: "us-west-2",
         body:
         {
-            prompt: "",
-            max_gen_len: 512,
-            temperature: 0.5,
-            top_p: 0.9
+            prompt: "hi",
+            max_gen_len: 150, // Manteniendo una longitud mayor para respuestas detalladas
+            temperature: 0.2, // Respuestas más precisas y menos aleatorias
+            top_p: 0.9 // Buen equilibrio para mantener variedad y coherencia
         }
     },
     {
@@ -30,14 +30,14 @@ export const modelList = [
         region: "us-east-1",
         body: 
         {
-            inputText:"this is where you place your input text",
+            inputText: "this text",
             textGenerationConfig:
             {
-                maxTokenCount:8192,
-                stopSequences:[],
-                temperature:0,
-                topP:1
+                maxTokenCount: 150, // Reducido para evitar respuestas demasiado largas
+                stopSequences: [], // Mantener vacío si no se desea detener el texto en ciertas palabras
+                temperature: 0.3, // Mejor precisión en las respuestas
+                topP: 0.8 // Control más estricto sobre la generación de palabras para coherencia
             }
         }
     }
-]
+];
