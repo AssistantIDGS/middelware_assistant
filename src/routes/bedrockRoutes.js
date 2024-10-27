@@ -20,16 +20,14 @@ bedrockRouter.post('/invoke', async (req, res) => {
     }
   
     try {
-      console.log("Hola")
       
       const result = await invokeModel(prompt, modelId);
-     
+      console.log(result)
       res.json({ response: result });
 
     } catch (error) {
       
       res.status(500).json({ error: error.message });
-    
     }
 });
 

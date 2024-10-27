@@ -2,79 +2,109 @@ import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedroc
 import bedrockConfig from "../../config/bedrock.js";
 import { modelList } from "../../config/modelList.js";
 
-
 export const listModels = () => {
   return modelList;
 };
 
+// Función auxiliar para validar arrays no vacíos
+const isNonEmptyArray = (arr) => Array.isArray(arr) && arr.length > 0;
+
+// Función para extraer el contenido de diferentes estructuras de respuesta
+const extractModelResponse = (parsedBody) => {
+  if (!parsedBody) {
+    throw new Error('Invalid response body');
+  }
+
+  // Define la estructura de mapeo para diferentes formatos de respuesta
+  const responseFormats = {
+    generation: (body) => body.generation,
+    results: (body) => body.results[0]?.outputText,
+    choices: (body) => body.choices[0]?.message?.content,
+    chat_history: (body) => body.chat_history[1].message
+  };
+
+  // Verifica cada formato posible
+  for (const [key, extractor] of Object.entries(responseFormats)) {
+      
+    // console.log(extractor)
+
+    if (parsedBody[key]) {
+      
+      const content = extractor(parsedBody);
+
+      if (content) return content;
+      
+    }
+  }
+
+  throw new Error('No valid content found in model response');
+};
+
+// Función auxiliar para actualizar el prompt en el cuerpo de la solicitud
+const updatePromptInBody = (body, prompt) => {
+  const updatedBody = { ...body };
+  
+  if (updatedBody.prompt) {
+    updatedBody.prompt = prompt;
+  }
+  if (updatedBody.inputText) {
+    updatedBody.inputText = prompt;
+  }
+  if (updatedBody.messages && Array.isArray(updatedBody.messages) && updatedBody.messages.length > 0) {
+    updatedBody.messages[0].content = prompt;
+  }
+  if (updatedBody.message) {
+    updatedBody.message = prompt;
+  }
+
+  return updatedBody;
+};
 
 const invokeModel = async (prompt, modelId) => {
+  // Buscar el modelo en la lista
   const model = modelList.find((m) => m.modelId === modelId);
-  // console.log(model);
-
-  // Verificar si el modelo existe
+  
   if (!model) {
-    throw new Error(`Modelo ${modelId} no encontrado en la lista de modelos.`);
+    throw new Error(`Model ${modelId} not found in model list.`);
   }
 
-  // Crear una copia del objeto de configuración del cuerpo del modelo para evitar mutaciones
-  const body = { ...model.body };
+  // Actualizar el cuerpo de la solicitud con el prompt
+  const body = updatePromptInBody(model.body, prompt);
 
-  // Actualizar el prompt en la configuración del cuerpo si existe
-  if (body.hasOwnProperty('prompt')) {
-    body.prompt = prompt;
-  }
-
-  // Si el cuerpo del modelo utiliza 'inputText', lo actualizamos
-  if (body.hasOwnProperty('inputText')) {
-    body.inputText = prompt;
-  }
-
-  // Si el cuerpo del modelo utiliza 'messages', actualizamos el contenido del primer mensaje
-  if (body.messages && Array.isArray(body.messages) && body.messages.length > 0) {
-    body.messages[0].content = prompt;
-  }
-
-  // Crear la configuración para invocar el modelo sin la referencia circular
+  // Configurar la invocación del modelo
   const invokeModelConfig = {
     ...bedrockConfig,
     region: model.region,
     modelId: model.modelId,
-    body: JSON.stringify(body) // Convierte el objeto modificado a una cadena JSON antes de enviarlo
+    body: JSON.stringify(body)
   };
-
-  console.log(invokeModelConfig);
-
-  // Crear una instancia del cliente Bedrock con la configuración general
-  const bedrockClient = new BedrockRuntimeClient({ region: model.region });
-
-  // Crear el comando con la configuración específica para invocar el modelo
-  const command = new InvokeModelCommand(invokeModelConfig);
-
+  console.log(invokeModelConfig)
   try {
+    // Crear cliente y comando
+    const bedrockClient = new BedrockRuntimeClient({ region: model.region });
+    const command = new InvokeModelCommand(invokeModelConfig);
+
+    // Ejecutar la llamada al modelo
     const response = await bedrockClient.send(command);
+    
 
-    // console.log("Respuesta completa del modelo:", response);
-
-    if (!response || !response.body) {
-      throw new Error("Respuesta inválida o vacía del modelo.");
+    if (!response?.body) {
+      throw new Error("Empty or invalid response from model.");
     }
 
+    // Decodificar y parsear la respuesta
     const decoder = new TextDecoder('utf-8');
+
     const responseBody = decoder.decode(response.body);
+    
     const parsedBody = JSON.parse(responseBody);
 
-    // Imprimimos la estructura completa de la respuesta para analizarla
-    console.log("Estructura de la respuesta decodificada:", parsedBody);
+    console.log(parsedBody)
+    // Extraer y retornar el contenido de la respuesta
+    return extractModelResponse(parsedBody);
 
-    // Ajusta la lógica basada en la estructura real de la respuesta
-    if ((parsedBody.results && parsedBody.results.length > 0)||(parsedBody.generation && parsedBody.generation.length > 0)) {
-      return parsedBody.generation || parsedBody.results[0].outputText;
-    } else {
-      throw new Error("Estructura inesperada en la respuesta del modelo.");
-    }
   } catch (error) {
-    console.error("Error al invocar el modelo:", error.message);
+    console.error("Error invoking model:", error.message);
     throw error;
   }
 };

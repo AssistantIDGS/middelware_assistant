@@ -28,7 +28,7 @@ export const modelList = [
         name: "Amazon Titan Text G1 Express",
         modelId: "amazon.titan-text-express-v1",
         region: "us-east-1",
-        body: 
+        body:
         {
             inputText: "this text",
             textGenerationConfig:
@@ -38,6 +38,31 @@ export const modelList = [
                 temperature: 0.3, // Mejor precisión en las respuestas
                 topP: 0.8 // Control más estricto sobre la generación de palabras para coherencia
             }
+        }
+    },
+    {   
+        name:"Jamba Mini",
+        modelId: "ai21.jamba-1-5-mini-v1:0",
+        region: "us-east-1",
+        body: {
+            messages: [
+                {
+                    role: "user",
+                    content: "INSERT YOUR PROMPT HERE"
+                }
+            ],
+            max_tokens: 150,
+            top_p: 0.8,
+            temperature: 0.7
+        }
+    },
+    {
+        name:"Command R",
+        modelId:"cohere.command-r-v1:0",
+        region:"us-east-1",
+        body: {
+            chat_history:[],
+            message : "hi!"
         }
     }
 ];
